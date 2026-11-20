@@ -125,3 +125,35 @@ const std::vector<nn::Layer> &nn::NeuralNetwork::forward(const Vector &input) {
 
   return layers;
 }
+
+nn::Scalar nn::NeuralNetwork::loss(const Vector &target) {
+
+  if (target.size() != layers.back().activations.size()) {
+    throw std::runtime_error("TODO: ADD ERROR MESSAGE");
+  }
+
+  Scalar l = 0;
+  for (int i = 0; i < target.size(); ++i) {
+    Scalar d = layers.back().activations[i] - target[i];
+    l += d * d;
+  }
+
+  return l / target.size();
+}
+
+nn::Scalar nn::NeuralNetwork::cost(const std::vector<Vector> &inputs,
+                                   const std::vector<Vector> &targets) {
+
+  if (inputs.size() != targets.size()) {
+    throw std::runtime_error("TODO: ADD ERROR MESSAGE");
+  }
+
+  Scalar c = 0;
+
+  for (int i = 0; i < inputs.size(); ++i) {
+    forward(inputs[i]);
+    c += loss(targets[i]);
+  }
+
+  return c / inputs.size();
+}

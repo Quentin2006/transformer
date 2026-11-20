@@ -33,10 +33,17 @@ public:
 
   const std::vector<Layer> &forward(const Vector &input);
 
+  // void train();
+
   const Config &getConf(void) { return config; }
 
 private:
   static Scalar ReLU(Scalar);
+
+  Scalar loss(const Vector &target); // assumes forward() was just called
+
+  Scalar cost(const std::vector<Vector> &inputs,
+              const std::vector<Vector> &targets);
 
   std::vector<Layer> layers;
   std::function<Scalar(Scalar)> activationFunction;
