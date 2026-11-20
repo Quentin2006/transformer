@@ -12,8 +12,6 @@
  * then passing it through an activation function (ReLU, sig, ...).
  *
  *
- *
- *
  * using linear algebra, we can compute the next layers activation via the
  * following formula:
  *
@@ -51,6 +49,8 @@
  */
 
 #include <nn.hpp>
+#include <stdexcept>
+#include <vector>
 
 nn::Scalar nn::NeuralNetwork::ReLU(nn::Scalar a) {
   if (a > 0.)
@@ -71,6 +71,12 @@ nn::NeuralNetwork::NeuralNetwork(const nn::Config &config) {
   layers.resize(config.hiddenLayerCount +
                 2); // +2 due to input and output layers
 
+  // init the input layer
+  layers[0].activations.resize(config.inputDim);
+  layers[0].activations.setZero();
+  layers[0].bias.resize(config.inputDim);
+  layers[0].bias.setZero();
+
   for (std::size_t i = 1; i < layers.size(); ++i) {
     // # of neruons in next layers
     const int out =
@@ -83,9 +89,39 @@ nn::NeuralNetwork::NeuralNetwork(const nn::Config &config) {
     layer.weight.resize(out, in);
     layer.weight.setRandom();
 
-    layer.bias = Vector::Zero(out);
+    layer.bias.resize(out);
+    layer.bias.setZero();
 
     layer.activations.resize(out);
     layer.activations.setZero();
   }
+}
+
+const std::vector<nn::Layer> &nn::NeuralNetwork::forward(const Vector &input) {
+
+  if (input.size() != layers[0].activations.size()) {
+    throw std::runtime_error(
+        "ERROR: Input dim must match neural nets input layers size");
+  }
+
+  // seed the first layers activation
+  layers[0].activations = input;
+
+  // we compute the current layer's activation by multiplying the previous
+  // layer's activation by the current connection's weight and adding the
+  // current layer's bias, then passing it through an activation function (ReLU,
+  // sig,
+  // ...).
+  for (size_t i = 1; i < layers.size(); i++) {
+    // we call the weight * activation + bias, z
+    layers[i].z = layers[i].weight * layers[i - 1].activations + layers[i].bias;
+
+    // we dont want to apply ReLU to the last element as all it will do is clip
+    // out possible output values
+    layers[i].activations = (i == layers.size() - 1)
+                                ? layers[i].z
+                                : layers[i].z.unaryExpr(activationFunction);
+  }
+
+  return layers;
 }

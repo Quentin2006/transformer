@@ -1,6 +1,7 @@
 #pragma once
 
 #include <Eigen/Core>
+#include <cstddef>
 #include <functional>
 #include <vector>
 
@@ -17,17 +18,22 @@ using Matrix = Eigen::Matrix<Scalar, Eigen::Dynamic,
 struct Layer {
   Matrix weight; // rows = out neurons, cols = in neurons
   Vector bias;   // size = out neurons
+  Vector z;
   Vector activations;
 };
 
 struct Config {
-  int inputDim, hiddenDim, outputDim, hiddenLayerCount;
+  size_t inputDim, hiddenDim, outputDim, hiddenLayerCount;
   ACTIVATION activation;
 };
 
 class NeuralNetwork {
 public:
   NeuralNetwork(const Config &);
+
+  const std::vector<Layer> &forward(const Vector &input);
+
+  const Config &getConf(void) { return config; }
 
 private:
   static Scalar ReLU(Scalar);
